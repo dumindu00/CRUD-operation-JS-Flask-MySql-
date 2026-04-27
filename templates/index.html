@@ -1,19 +1,60 @@
 <!DOCTYPE html>
 <html>
+
+    <style>
+    body { font-family: sans-serif; margin: 20px; }
+    
+    .search-container {
+        padding: 20px;
+        background-color: #f4f4f4;
+        border-bottom: 2px solid #ccc;
+        margin-bottom: 20px;
+    }
+
+    .inventory-container {
+        padding: 20px;
+        border: 1px solid #eee;
+    }
+
+    #vehicleList {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    #vehicleList li {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+</style>
 <body>
+
     <h2>Vehicle Storage</h2>
+
+    <div class="search-container">
+            <h2>Search Vehicles</h2> 
+            <input type="text" placeholder="Search for vehicles.." id="searchInput">
+            <button onclick="searchVehicle()">Search</button>
+            <ul id="searchResults"></ul>
+        </div>
+
+    
     <input type="text" id="name" placeholder="Vehicle Name">
+
     <select id="category">
         <option value="Car">Car</option>
         <option value="Bike">Bike</option>
         <option value="SUV">SUV</option>
     </select>
+
     <input type="number" id="year" placeholder="Year">
     <input type="number" id="price" placeholder="Price">
     <button onclick="addVehicle()">Add Vehicle</button>
 
-    <h3>Inventory</h3>
-    <ul id="vehicleList"></ul>
+
+    <div class="inventory-container">
+        <h3>Inventory</h3>
+        <ul id="vehicleList"></ul>
+    </div>
 
     <script>
         async function addVehicle() {
@@ -32,7 +73,7 @@
             loadVehicles();
         }
 
-        async  function deleteItem(id) {
+        async  function deleteVehicle(id) {
             if(confirm("Are you sure you want to delete this item..?")) {
                 await fetch(`delete_vehicles/${id}`, {
                     method: 'DELETE'
@@ -42,14 +83,36 @@
 
         }
 
+        async function searchVehicle() {
+            const q = document.getElementById('searchInput').value
+            const res = await fetch(`/search_vehicles?q=${encodeURIComponent(q)}`)
+            const data = await res.json()
+
+            const list = document.getElementById('searchResults')
+
+            if(data.length === 0) {
+                list.innerHTML = "<li>No matches found.</li>"
+            } else {
+                list.innerHTML = data.map(v => `<li><strong>${v[1]}</strong> | ${v[2]}</li>`)
+            }
+        }
+
+
         async function loadVehicles() {
             const res = await fetch('/get_vehicles');
             const data = await res.json();
             const list = document.getElementById('vehicleList');
-            list.innerHTML = data.map(v => `<li>${v[1]} (${v[2]}) - ${v[3]} - $: ${v[4]}</li> <button onclick="deleteItem(${[v[0]]})">Remove</button>`).join('');
+                        list.innerHTML = data.map(v => `
+                        <li>
+                        <strong>${v[1]}</strong> | Category: ${v[2]} | Year: ${v[3]} | Price: $${v[4]}
+                        <button onclick="deleteVehicle(${v[0]})">Delete</button>
+                        </li>
+                        `).join('');
+        
         }
 
         loadVehicles(); // Load on start
     </script>
 </body>
 </html>
+
