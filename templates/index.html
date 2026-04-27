@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Vehicle Storage</h2>
+    <input type="text" id="name" placeholder="Vehicle Name">
+    <select id="category">
+        <option value="Car">Car</option>
+        <option value="Bike">Bike</option>
+        <option value="SUV">SUV</option>
+    </select>
+    <input type="number" id="year" placeholder="Year">
+    <input type="number" id="price" placeholder="Price">
+    <button onclick="addVehicle()">Add Vehicle</button>
+
+    <h3>Inventory</h3>
+    <ul id="vehicleList"></ul>
+
+    <script>
+        async function addVehicle() {
+            const data = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('category').value,
+                year: document.getElementById('year').value,
+                price: document.getElementById('price').value
+            };
+
+            await fetch('/add_vehicle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            loadVehicles();
+        }
+
+        async  function deleteItem(id) {
+            if(confirm("Are you sure you want to delete this item..?")) {
+                await fetch(`delete_vehicles/${id}`, {
+                    method: 'DELETE'
+                })
+                loadVehicles()
+            }
+
+        }
+
+        async function loadVehicles() {
+            const res = await fetch('/get_vehicles');
+            const data = await res.json();
+            const list = document.getElementById('vehicleList');
+            list.innerHTML = data.map(v => `<li>${v[1]} (${v[2]}) - ${v[3]} - $: ${v[4]}</li> <button onclick="deleteItem(${[v[0]]})">Remove</button>`).join('');
+        }
+
+        loadVehicles(); // Load on start
+    </script>
+</body>
+</html>
