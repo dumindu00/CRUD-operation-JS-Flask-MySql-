@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True 
 CORS(app)
 mysql = MySQL()
 mysql.init_app(app)
@@ -40,9 +41,23 @@ def add_vehicle():
 def get_vehicles():
     conn = mysql.connect()
     cursor = conn.cursor()
-    # FIX: Corrected FORM to FROM
     cursor.execute("SELECT * FROM vehicles")
     data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(data)
+
+@app.route('/search_vehicles', methods=['GET'])
+def search_vehicles():
+    search_term = request.args.get('q', '')
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    query = "SELECT * FROM vehicles WHERE name LIKE %s OR category LIKE %s"
+    like_term = f"%{search_term}%"
+    cursor.execute(query, (like_term, like_term))
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
     return jsonify(data)
 
 @app.route('/delete_vehicles/<int:id>', methods=['DELETE'])
